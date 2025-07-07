@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NathIA | Estrategias Digitales con IA para Máximo Impacto</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;700;900&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- PDF Library (jsPDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+    <style>
+        :root {
+            --primary-violet: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --neutral-950: #0a0a0a;
+            --neutral-900: #171717;
+            --neutral-800: #262626;
+            --neutral-300: #d1d5db;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--neutral-950); color: #f1f5f9; line-height: 1.6; overflow-x: hidden; }
+        .font-playfair { font-family: 'Playfair Display', serif; }
+        .font-signature { font-family: 'Dancing Script', cursive; }
+        .hero-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%), radial-gradient(circle at 40% 40%, rgba(236, 72, 153, 0.1) 0%, transparent 50%), linear-gradient(135deg, var(--neutral-950) 0%, #111827 100%); animation: gradientShift 20s ease infinite; }
+        @keyframes gradientShift { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        .particles { position: absolute; width: 100%; height: 100%; overflow: hidden; z-index: 1; }
+        .particle { position: absolute; width: 2px; height: 2px; background: var(--primary-violet); border-radius: 50%; animation: float 6s ease-in-out infinite; opacity: 0.6; }
+        @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(180deg); } }
+        .strategy-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid rgba(139, 92, 246, 0.2); backdrop-filter: blur(10px); background: rgba(23, 23, 23, 0.8); }
+        .strategy-card:hover { transform: translateY(-12px) scale(1.02); box-shadow: 0 25px 60px rgba(139, 92, 246, 0.3); border-color: var(--primary-violet); }
+        .strategy-content { max-height: 0; overflow: hidden; transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, padding 0.4s ease; opacity: 0; padding: 0; }
+        .strategy-card.active .strategy-content { max-height: 1000px; opacity: 1; padding: 1.5rem 0 0 0; }
+        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); transition: opacity 0.3s ease; }
+        .spinner { width: 60px; height: 60px; border: 4px solid rgba(139, 92, 246, 0.3); border-top: 4px solid var(--primary-violet); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .notification { position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 12px; color: white; font-weight: 600; z-index: 10000; transform: translateX(400px); transition: transform 0.3s ease; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+        .notification.show { transform: translateX(0); }
+        .notification.success { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .notification.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary-violet), var(--primary-dark)); transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent); transition: left 0.5s ease; }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(139, 92, 246, 0.4); }
+        .chat-container { position: fixed; bottom: 20px; right: 20px; width: 350px; max-height: 450px; background: var(--neutral-900); border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); overflow: hidden; display: flex; flex-direction: column; z-index: 10001; border: 1px solid var(--neutral-800); transform: translateY(20px) scale(0.95); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; visibility: hidden; }
+        .chat-container.active { transform: translateY(0) scale(1); opacity: 1; visibility: visible; }
+        .chat-header { background: linear-gradient(135deg, var(--primary-violet), var(--primary-dark)); color: white; padding: 15px 20px; font-weight: 700; font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; border-radius: 16px 16px 0 0; }
+        .chat-header i { cursor: pointer; font-size: 1.2em; }
+        .chat-box { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .chat-message { padding: 10px 15px; border-radius: 12px; max-width: 80%; word-wrap: break-word; font-size: 0.95em; line-height: 1.5; }
+        .chat-message.user { background-color: var(--primary-violet); color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+        .chat-message.ai { background-color: var(--neutral-800); color: var(--neutral-300); align-self: flex-start; border-bottom-left-radius: 0; }
+        .chat-message.ai.typing { opacity: 0.7; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+        .chat-input-area { display: flex; padding: 15px; background-color: var(--neutral-900); border-top: 1px solid var(--neutral-800); }
+        .chat-input-area input { flex-grow: 1; background-color: var(--neutral-800); border: none; padding: 10px 15px; border-radius: 10px; color: white; outline: none; margin-right: 10px; }
+        .chat-input-area button { background: var(--primary-violet); color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer; transition: background 0.3s ease; font-weight: 600; }
+        .chat-input-area button:hover { background: var(--primary-dark); }
+        .chat-float-trigger { position: fixed; bottom: 20px; right: 20px; z-index: 10001; display: flex; align-items: center; gap: 8px; padding: 10px 15px; border-radius: 25px; font-size: 0.9em; transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease; }
+        .chat-float-trigger:hover { transform: scale(1.05); }
+        .chat-float-trigger i { font-size: 1.2em; }
+        @media (max-width: 768px) {
+            .chat-container { bottom: 10px; right: 10px; width: calc(100% - 20px); max-height: 80vh; border-radius: 10px; }
+            .chat-float-trigger { bottom: 10px; right: 10px; padding: 8px 12px; font-size: 0.8em; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p class="text-xl font-semibold mb-2"></p>
+        <p class="text-sm text-gray-400">Esto puede tomar unos momentos</p>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notification-text"></span>
+    </div>
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 w-full z-50 bg-black/20 backdrop-blur-sm border-b border-white/10">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold">
+                    Nath<span class="text-violet-400">IA</span>
+                </div>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#services" class="text-gray-300 hover:text-white transition-colors">Servicios</a>
+                    <a href="#methodology" class="text-gray-300 hover:text-white transition-colors">Metodología</a>
+                    <a href="#contact" class="text-gray-300 hover:text-white transition-colors">Contacto</a>
+                </nav>
+                <a href="https://wa.me/573046147727" target="_blank" rel="noopener noreferrer" class="btn-primary px-6 py-2 rounded-lg font-semibold text-white flex items-center space-x-2">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>Conversemos</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero" class="relative min-h-screen flex items-center justify-center">
+        <div class="hero-bg"></div>
+        <div class="particles">
+            <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+            <div class="particle" style="left: 20%; animation-delay: 1s;"></div>
+            <div class="particle" style="left: 30%; animation-delay: 2s;"></div>
+            <div class="particle" style="left: 40%; animation-delay: 3s;"></div>
+            <div class="particle" style="left: 50%; animation-delay: 4s;"></div>
+            <div class="particle" style="left: 60%; animation-delay: 5s;"></div>
+            <div class="particle" style="left: 70%; animation-delay: 2s;"></div>
+            <div class="particle" style="left: 80%; animation-delay: 3s;"></div>
+            <div class="particle" style="left: 90%; animation-delay: 1s;"></div>
+        </div>
+        
+        <div class="relative z-10 text-center px-6 max-w-6xl mx-auto">
+            <h1 class="text-5xl md:text-7xl font-black mb-6 reveal">
+                Transforma tu Negocio con
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">
+                    Activos Digitales Inteligentes
+                </span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto reveal">
+                Fusionamos la pericia de un equipo <span class="text-violet-400 font-semibold">multidisciplinario</span> 
+                con el poder de la <span class="text-violet-400 font-semibold">Inteligencia Artificial</span> para construir 
+                ecosistemas digitales que generan resultados medibles.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center reveal">
+                <a href="#services" class="btn-primary px-8 py-4 rounded-lg font-semibold text-lg">
+                    Explorar Servicios
+                </a>
+                <button id="download-portfolio" class="bg-transparent border-2 border-violet-400 text-violet-400 hover:bg-violet-400 hover:text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300">
+                    Descargar Portafolio
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-20 px-6">
+        <div class="container mx-auto max-w-7xl">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-4xl md:text-6xl font-black mb-6">
+                    Nuestra <span class="text-violet-400">Propuesta de Valor</span>
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    Cada servicio es una pieza estratégica de un ecosistema diseñado para tu crecimiento sostenible.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="services-grid">
+                <!-- Service 1 -->
+                <div class="strategy-card rounded-2xl p-8 cursor-pointer reveal" data-service="branding">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Branding Digital y Narrativa</h3>
+                    </div>
+                    <p class="text-gray-400 mb-4">Construimos el alma de tu marca, el activo más valioso de tu empresa.</p>
+                    <div class="strategy-content">
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-violet-500 pl-4">
+                                <h4 class="font-semibold text-violet-400 mb-2">Investigación de Mercado</h4>
+                                <p class="text-gray-300 text-sm">Analizamos competencia y audiencia para encontrar tu posicionamiento único y diferenciador.</p>
+                            </div>
+                            <div class="border-l-4 border-violet-500 pl-4">
+                                <h4 class="font-semibold text-violet-400 mb-2">Identidad Visual Completa</h4>
+                                <p class="text-gray-300 text-sm">Diseñamos desde el logo hasta paleta de colores y tipografía coherente en todos los canales.</p>
+                            </div>
+                            <div class="border-l-4 border-violet-500 pl-4">
+                                <h4 class="font-semibold text-violet-400 mb-2">Voz y Tono de Marca</h4>
+                                <p class="text-gray-300 text-sm">Definimos una narrativa que genera confianza, lealtad y convierte tu empresa en marca memorable.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 2 -->
+                <div class="strategy-card rounded-2xl p-8 cursor-pointer reveal" data-service="web">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Ecosistemas Web de Alto Rendimiento</h3>
+                    </div>
+                    <p class="text-gray-400 mb-4">Tu web no es un folleto, es tu principal motor de crecimiento.</p>
+                    <div class="strategy-content">
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-blue-500 pl-4">
+                                <h4 class="font-semibold text-blue-400 mb-2">Diseño UX/UI Centrado en el Usuario</h4>
+                                <p class="text-gray-300 text-sm">Creamos interfaces intuitivas que guían al usuario hacia la conversión de manera natural.</p>
+                            </div>
+                            <div class="border-l-4 border-blue-500 pl-4">
+                                <h4 class="font-semibold text-blue-400 mb-2">Desarrollo Escalable</h4>
+                                <p class="text-gray-300 text-sm">Construimos sobre tecnologías modernas que permiten crecer sin limitaciones técnicas.</p>
+                            </div>
+                            <div class="border-l-4 border-blue-500 pl-4">
+                                <h4 class="font-semibold text-blue-400 mb-2">Optimización para la Conversión</h4>
+                                <p class="text-gray-300 text-sm">Implementamos A/B testing y análisis de comportamiento para maximizar resultados.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 3 -->
+                <div class="strategy-card rounded-2xl p-8 cursor-pointer reveal" data-service="seo">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Contenido Estratégico y SEO</h3>
+                    </div>
+                    <p class="text-gray-400 mb-4">Atraemos oportunidades de negocio, no las perseguimos.</p>
+                    <div class="strategy-content">
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-green-500 pl-4">
+                                <h4 class="font-semibold text-green-400 mb-2">Arquitectura de Contenido</h4>
+                                <p class="text-gray-300 text-sm">Creamos pilares de contenido que te posicionan como autoridad en tu sector.</p>
+                            </div>
+                            <div class="border-l-4 border-green-500 pl-4">
+                                <h4 class="font-semibold text-green-400 mb-2">SEO Técnico y On-Page</h4>
+                                <p class="text-gray-300 text-sm">Optimizamos cada aspecto técnico para que los motores de búsqueda prioricen tu contenido.</p>
+                            </div>
+                            <div class="border-l-4 border-green-500 pl-4">
+                                <h4 class="font-semibold text-green-400 mb-2">Link Building de Calidad</h4>
+                                <p class="text-gray-300 text-sm">Construimos una red de enlaces de autoridad que aumenta tu relevancia orgánica.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 4 -->
+                <div class="strategy-card rounded-2xl p-8 cursor-pointer reveal" data-service="ai">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Inteligencia Artificial y Automatización</h3>
+                    </div>
+                    <p class="text-gray-400 mb-4">Tu ventaja competitiva en la era de la transformación digital.</p>
+                    <div class="strategy-content">
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-purple-500 pl-4">
+                                <h4 class="font-semibold text-purple-400 mb-2">Agentes de IA Personalizados</h4>
+                                <p class="text-gray-300 text-sm">Desarrollamos asistentes virtuales que mejoran el servicio al cliente 24/7.</p>
+                            </div>
+                            <div class="border-l-4 border-purple-500 pl-4">
+                                <h4 class="font-semibold text-purple-400 mb-2">Automatización de Marketing</h4>
+                                <p class="text-gray-300 text-sm">Creamos flujos de nutrición que personalizan la comunicación y aceleran ventas.</p>
+                            </div>
+                            <div class="border-l-4 border-purple-500 pl-4">
+                                <h4 class="font-semibold text-purple-400 mb-2">Análisis Predictivo</h4>
+                                <p class="text-gray-300 text-sm">Usamos IA para predecir tendencias y optimizar la toma de decisiones estratégicas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 5 -->
+                <div class="strategy-card rounded-2xl p-8 cursor-pointer reveal" data-service="social">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Gestión de Comunidades Digitales</h3>
+                    </div>
+                    <p class="text-gray-400 mb-4">Convertimos seguidores en embajadores de tu marca.</p>
+                    <div class="strategy-content">
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-orange-500 pl-4">
+                                <h4 class="font-semibold text-orange-400 mb-2">Estrategia Multiplataforma</h4>
+                                <p class="text-gray-300 text-sm">Definimos en qué redes sociales debe estar tu marca y con qué propósito estratégico.</p>
+                            </div>
+                            <div class="border-l-4 border-orange-500 pl-4">
+                                <h4 class="font-semibold text-orange-400 mb-2">Contenido de Valor</h4>
+                                <p class="text-gray-300 text-sm">Producimos contenido que educa, inspira y fomenta la interacción auténtica.</p>
+                            </div>
+                            <div class="border-l-4 border-orange-500 pl-4">
+                                <h4 class="font-semibold text-orange-400 mb-2">Escucha Social Activa</h4>
+                                <p class="text-gray-300 text-sm">Monitoreamos conversaciones para obtener insights y gestionar reputación.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service 6 -->
+                <div class="strategy-card rounded-2xl p-8 cursor-pointer reveal" data-service="ads">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h4a2 2 0 002-2zM15 19v-6a2 2 0 012-2h4a2 2 0 012 2v6a2 2 0 01-2 2h-4a2 2 0 01-2-2zM11 13a1 1 0 11-2 0v-6a1 1 0 012 0v6zM7 9a1 1 0 10-2 0v6a1 1 0 002 0V9zM19 15a1 1 0 10-2 0v6a1 1 0 002 0v-6z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Campañas de Publicidad Digital Optimizada</h3>
+                    </div>
+                    <p class="text-gray-400 mb-4">Inversiones inteligentes que se traducen en crecimiento medible.</p>
+                    <div class="strategy-content">
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-yellow-500 pl-4">
+                                <h4 class="font-semibold text-yellow-400 mb-2">Google Ads y Meta Ads</h4>
+                                <p class="text-gray-300 text-sm">Diseñamos y ejecutamos campañas que maximizan el ROI en las principales plataformas.</p>
+                            </div>
+                            <div class="border-l-4 border-yellow-500 pl-4">
+                                <h4 class="font-semibold text-yellow-400 mb-2">Segmentación Precisa</h4>
+                                <p class="text-gray-300 text-sm">Llegamos a tu público objetivo con mensajes personalizados y de alto impacto.</p>
+                            </div>
+                            <div class="border-l-4 border-yellow-500 pl-4">
+                                <h4 class="font-semibold text-yellow-400 mb-2">Optimización Continua</h4>
+                                <p class="text-gray-300 text-sm">Analizamos datos en tiempo real para asegurar el máximo rendimiento de tus campañas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Methodology Section -->
+    <section id="methodology" class="py-24 px-6 bg-neutral-900">
+        <div class="container mx-auto max-w-7xl">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-4xl md:text-6xl font-black mb-6">
+                    Nuestro <span class="text-violet-400">Proceso de Éxito</span>
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    Te guiamos paso a paso, asegurando transparencia y resultados tangibles en cada etapa.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                <!-- Step 1 -->
+                <div class="reveal">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-5xl font-bold text-white border-8 border-purple-900/50">
+                        1
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Diagnóstico y Estrategia</h3>
+                    <p class="text-gray-400">
+                        Profundizamos en tus objetivos y desafíos para crear un plan de acción personalizado, alineado con tu visión de negocio.
+                    </p>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="reveal">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-5xl font-bold text-white border-8 border-indigo-900/50">
+                        2
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Implementación Inteligente</h3>
+                    <p class="text-gray-400">
+                        Ejecutamos tu estrategia con las herramientas más avanzadas, integrando IA para optimizar cada proceso y canal digital.
+                    </p>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="reveal">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-5xl font-bold text-white border-8 border-emerald-900/50">
+                        3
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Análisis y Optimización</h3>
+                    <p class="text-gray-400">
+                        Medimos el rendimiento en tiempo real, identificamos áreas de mejora y ajustamos la estrategia para garantizar un crecimiento continuo.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-24 px-6">
+        <div class="container mx-auto max-w-5xl">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-4xl md:text-6xl font-black mb-6">
+                    Hablemos de <span class="text-violet-400">Tu Proyecto</span>
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    ¿Listo para potenciar tu negocio con estrategias digitales de vanguardia? Contáctanos y diseñemos juntos el futuro.
+                </p>
+            </div>
+
+            <div class="reveal flex justify-center">
+                <!-- Whatsapp Button -->
+                <a href="https://wa.me/573046147727" target="_blank" rel="noopener noreferrer" class="btn-primary px-8 py-4 rounded-lg font-semibold text-lg text-white flex items-center space-x-3">
+                    <i class="fab fa-whatsapp text-2xl"></i>
+                    <span>Conecta vía WhatsApp</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-16 px-6 bg-neutral-900 border-t border-white/10">
+        <div class="container mx-auto max-w-7xl text-center text-gray-500">
+            &copy; <span id="footer-year"></span> NathIA. Todos los derechos reservados. Estamos transformando visiones en realidades digitales desde 2022.
+        </div>
+    </footer>
+
+    <!-- AI Chat Widget (Placeholder - Not functional AI, but demonstrates UI) -->
+    <div id="chat-widget" class="chat-container">
+        <div class="chat-header">
+            <span>NathIA AI Assistant</span>
+            <i class="fas fa-times" id="close-chat"></i>
+        </div>
+        <div class="chat-box" id="chat-messages">
+            <!-- Initial AI Greeting -->
+            <div class="chat-message ai">
+                Hola, soy NathIA, tu asistente de marketing digital. Estoy aquí para ayudarte a explorar cómo podemos desarrollar tus activos digitales de forma estratégica y holística. ¿En qué área de tu negocio te gustaría enfocarte hoy? No siempre nos basamos solo en IA, usamos la tecnología más adecuada para cada desafío.
+            </div>
+            <!-- User and AI messages will be appended here -->
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Haz tu pregunta aquí...">
+            <button id="send-chat-message">Enviar</button>
+        </div>
+    </div>
+
+    <!-- Button to open the chat -->
+    <button id="open-chat-button" class="btn-primary chat-float-trigger">
+        <i class="fas fa-comment-dots"></i>
+        <span>Chat AI</span>
+    </button>
+    
+    <script>
+        // --- App Object ---
+        const NathIA_App = {
+            // --- Configuration ---
+            config: {
+                whatsAppPhone: '573046147727',
+                portfolioUrl: 'https://nathaliapertuzpava.netlify.app/',
+                pdfMargins: { top: 60, bottom: 60, left: 40, right: 40 },
+                pdfLineSpacing: 1.5,
+                pdfTextColor: [23, 23, 23],
+                pdfAccentColor: [139, 92, 246]
+            },
+
+            // --- UI Elements ---
+            elements: {
+                loadingOverlay: document.getElementById('loading-overlay'),
+                notification: document.getElementById('notification'),
+                notificationText: document.getElementById('notification-text'),
+                chatWidget: document.getElementById('chat-widget'),
+                openChatButton: document.getElementById('open-chat-button'),
+                closeChatButton: document.getElementById('close-chat'),
+                chatMessages: document.getElementById('chat-messages'),
+                chatInput: document.getElementById('chat-input'),
+                sendChatMessageButton: document.getElementById('send-chat-message'),
+                strategyCards: document.querySelectorAll('.strategy-card'),
+                revealElements: document.querySelectorAll('.reveal'),
+                downloadPortfolioButton: document.getElementById('download-portfolio'),
+                footerYear: document.getElementById('footer-year')
+            },
+
+            // --- App State ---
+            state: {
+                userName: '',
+                lastTopic: '',
+                hasGreeted: false
+            },
+            
+            // --- Initialization ---
+            init() {
+                this.bindEvents();
+                this.initScrollObserver();
+                this.updateFooterYear();
+            },
+
+            // --- Event Binding ---
+            bindEvents() {
+                this.elements.downloadPortfolioButton.addEventListener('click', () => this.PDF_Generator.generate());
+                this.elements.strategyCards.forEach(card => card.addEventListener('click', () => card.classList.toggle('active')));
+                this.elements.openChatButton.addEventListener('click', () => this.Chat.open());
+                this.elements.closeChatButton.addEventListener('click', () => this.Chat.close());
+                this.elements.sendChatMessageButton.addEventListener('click', () => this.Chat.handleUserInput());
+                this.elements.chatInput.addEventListener('keypress', e => {
+                    if (e.key === 'Enter') this.Chat.handleUserInput();
+                });
+            },
+
+            // --- Utility Functions ---
+            showLoading(text = 'Procesando...') {
+                this.elements.loadingOverlay.querySelector('p').textContent = text;
+                this.elements.loadingOverlay.classList.remove('hidden');
+            },
+            hideLoading() {
+                this.elements.loadingOverlay.classList.add('hidden');
+            },
+            showNotification(message, type = 'success') {
+                this.elements.notificationText.textContent = message;
+                this.elements.notification.className = `notification show ${type}`;
+                setTimeout(() => {
+                    this.elements.notification.className = 'notification';
+                }, 5000);
+            },
+            initScrollObserver() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+                this.elements.revealElements.forEach(el => observer.observe(el));
+            },
+            updateFooterYear() {
+                if(this.elements.footerYear) {
+                    this.elements.footerYear.textContent = new Date().getFullYear();
+                }
+            },
+
+            // --- Chat Module ---
+            Chat: {
+                open() {
+                    NathIA_App.elements.chatWidget.classList.add('active');
+                    NathIA_App.elements.openChatButton.style.display = 'none';
+                },
+                close() {
+                    NathIA_App.elements.chatWidget.classList.remove('active');
+                    NathIA_App.elements.openChatButton.style.display = 'flex';
+                },
+                addMessage(html, sender) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('chat-message', sender);
+                    messageDiv.innerHTML = html;
+                    NathIA_App.elements.chatMessages.appendChild(messageDiv);
+                    NathIA_App.elements.chatMessages.scrollTop = NathIA_App.elements.chatMessages.scrollHeight;
+                },
+                handleUserInput() {
+                    let messageText = NathIA_App.elements.chatInput.value.trim();
+                    if (!messageText) return;
+
+                    this.addMessage(`<p>${messageText}</p>`, 'user');
+                    NathIA_App.elements.chatInput.value = '';
+
+                    const typingDiv = document.createElement('div');
+                    typingDiv.classList.add('chat-message', 'ai', 'typing');
+                    typingDiv.innerHTML = '<p>...</p>';
+                    NathIA_App.elements.chatMessages.appendChild(typingDiv);
+                    NathIA_App.elements.chatMessages.scrollTop = NathIA_App.elements.chatMessages.scrollHeight;
+
+                    setTimeout(() => {
+                        NathIA_App.elements.chatMessages.removeChild(typingDiv);
+                        const response = this.getAIResponse(messageText);
+                        this.addMessage(response, 'ai');
+                    }, 1200);
+                },
+                getAIResponse(message) {
+                    // This is the "smarter" simulated AI logic
+                    const knowledgeBase = [
+                        { keywords: ["hola", "saludos", "buenos", "buenas"], priority: 1, type: 'greeting' },
+                        { keywords: ["precio", "costo", "cotización", "cuánto vale", "presupuesto"], priority: 10, type: 'contact' },
+                        { keywords: ["asesoría", "contacto", "hablar con alguien", "ayuda", "información"], priority: 10, type: 'contact' },
+                        { keywords: ["gracias", "muy amable"], priority: 2, type: 'thanks' },
+                        { keywords: ["branding", "marca", "logo", "identidad"], priority: 5, type: 'service', topic: 'Branding Digital' },
+                        { keywords: ["web", "página", "sitio", "desarrollo"], priority: 5, type: 'service', topic: 'Ecosistemas Web' },
+                        { keywords: ["seo", "posicionamiento", "google"], priority: 5, type: 'service', topic: 'SEO' },
+                        { keywords: ["ia", "inteligencia artificial", "automatización", "chatbot"], priority: 5, type: 'service', topic: 'Inteligencia Artificial' },
+                        { keywords: ["redes", "social", "comunidades", "instagram", "facebook"], priority: 5, type: 'service', topic: 'Gestión de Comunidades' },
+                        { keywords: ["publicidad", "ads", "campañas", "anuncios"], priority: 5, type: 'service', topic: 'Publicidad Digital' }
+                    ];
+
+                    const nameMatch = message.match(/(?:mi nombre es|soy|me llamo)\s+(\w+)/i);
+                    if (nameMatch && nameMatch[1]) {
+                        NathIA_App.state.userName = nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1);
+                    }
+
+                    let bestMatch = { priority: 0, type: 'default', topic: '' };
+                    knowledgeBase.forEach(rule => {
+                        if (rule.keywords.some(kw => message.toLowerCase().includes(kw))) {
+                            if (rule.priority > bestMatch.priority) {
+                                bestMatch = rule;
+                            }
+                        }
+                    });
+                    
+                    if (bestMatch.topic) NathIA_App.state.lastTopic = bestMatch.topic;
+
+                    const whatsappLink = this.generateWhatsAppLink();
+                    const whatsappButton = `<a href="${whatsappLink}" target="_blank" rel="noopener noreferrer" class="bg-violet-600 text-white px-4 py-2 rounded-lg mt-3 inline-block text-center text-sm"><i class="fab fa-whatsapp mr-2"></i>Contactar Asesor</a>`;
+
+                    switch (bestMatch.type) {
+                        case 'greeting':
+                            if(NathIA_App.state.hasGreeted) return `<p>¡Hola de nuevo${NathIA_App.state.userName ? ', ' + NathIA_App.state.userName : ''}! ¿En qué más puedo ayudarte?</p>`;
+                            NathIA_App.state.hasGreeted = true;
+                            return `<p>¡Hola${NathIA_App.state.userName ? ', ' + NathIA_App.state.userName : ''}! Soy NathIA, tu asistente de marketing digital. Es un placer conocerte. ¿Cómo podemos ayudarte a potenciar tus activos digitales hoy?</p>`;
+                        case 'service':
+                            return `<p>¡Excelente elección${NathIA_App.state.userName ? ', ' + NathIA_App.state.userName : ''}! El servicio de <strong>${bestMatch.topic}</strong> es clave para una estrategia digital sólida. Para darte la mejor asesoría, te recomiendo hablar con un especialista que pueda entender tu caso a fondo.</p>${whatsappButton}`;
+                        case 'contact':
+                            return `<p>¡Claro que sí! Para darte una asesoría precisa, lo mejor es que conversemos directamente. Un especialista está listo para atenderte.</p>${whatsappButton}`;
+                        case 'thanks':
+                            return `<p>¡A ti por tu interés! Si decides dar el siguiente paso para transformar tu negocio, estaremos encantados de ayudarte.</p>`;
+                        default:
+                            return `<p>Entiendo. Para analizar tu necesidad y ofrecerte una solución estratégica, lo más efectivo es una breve conversación con nuestro equipo.</p>${whatsappButton}`;
+                    }
+                },
+                generateWhatsAppLink() {
+                    const { whatsAppPhone } = NathIA_App.config;
+                    const { userName, lastTopic } = NathIA_App.state;
+                    const context = lastTopic ? `%0a%0aMi consulta es sobre: *${lastTopic}*.` : '';
+                    const whatsappMessage = `Hola, ${userName || 'me gustaría'} solicitar una asesoría estratégica para mis activos digitales con NathIA.${context}`;
+                    return `https://wa.me/${whatsAppPhone}?text=${encodeURIComponent(whatsappMessage)}`;
+                }
+            },
+
+            // --- PDF Generator Module (Native) ---
+            PDF_Generator: {
+                generate() {
+                    NathIA_App.showLoading('Generando PDF profesional...');
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF({
+                            orientation: 'portrait',
+                            unit: 'pt',
+                            format: 'letter'
+                        });
+                        
+                        let y = NathIA_App.config.pdfMargins.top;
+                        let pageNumber = 1;
+
+                        const addHeader = (doc) => {
+                            doc.setFontSize(36);
+                            doc.setFont('helvetica', 'bold');
+                            doc.text('NathIA', 40, y);
+                        };
+                        
+                        const addFooter = (doc, pageNum) => {
+                            const pageHeight = doc.internal.pageSize.getHeight();
+                            doc.setFontSize(9);
+                            doc.setFont('helvetica', 'normal');
+                            doc.setTextColor(150);
+                            doc.text(`Página ${pageNum}`, doc.internal.pageSize.getWidth() - 60, pageHeight - 30);
+                            doc.text('© NathIA | ' + NathIA_App.config.portfolioUrl, 40, pageHeight - 30);
+                        };
+                        
+                        const checkPageBreak = (neededHeight) => {
+                            if (y + neededHeight > doc.internal.pageSize.getHeight() - NathIA_App.config.pdfMargins.bottom) {
+                                addFooter(doc, pageNumber);
+                                doc.addPage();
+                                y = NathIA_App.config.pdfMargins.top;
+                                pageNumber++;
+                                addHeader(doc);
+                                y += 40;
+                            }
+                            return y;
+                        };
+                        
+                        // Page 1: Cover
+                        addHeader(doc);
+                        y += 40;
+                        
+                        doc.setFontSize(16);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(...NathIA_App.config.pdfAccentColor);
+                        doc.text('Estrategias Digitales con IA para Máximo Impacto', 40, y);
+                        y += 80;
+                        
+                        doc.setTextColor(...NathIA_App.config.pdfTextColor);
+                        doc.setFontSize(20);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('Nuestra Propuesta de Valor', 40, y);
+                        y += 25;
+
+                        doc.setFontSize(12);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setLineHeightFactor(NathIA_App.config.pdfLineSpacing);
+                        const introText = doc.splitTextToSize('En NathIA, nos especializamos en la creación y optimización de activos digitales estratégicos que impulsan el crecimiento sostenible. Combinamos un enfoque humano y multidisciplinario con el poder de la tecnología, incluyendo la Inteligencia Artificial, para desarrollar soluciones integrales y holísticas que se adaptan a sus objetivos.', doc.internal.pageSize.getWidth() - 80);
+                        doc.text(introText, 40, y);
+                        y += doc.getTextDimensions(introText).h + 40;
+                        
+                        addFooter(doc, pageNumber);
+                        
+                        // Page 2 onwards: Services
+                        const allServicesData = Array.from(NathIA_App.elements.strategyCards).map(card => {
+                            const serviceTitle = card.querySelector('h3').textContent;
+                            const serviceDescription = card.querySelector('p').textContent;
+                            const serviceDetails = Array.from(card.querySelectorAll('.strategy-content div')).map(detailDiv => {
+                                return { title: detailDiv.querySelector('h4').textContent, text: detailDiv.querySelector('p').textContent };
+                            });
+                            return { title: serviceTitle, description: serviceDescription, details: serviceDetails };
+                        });
+                        
+                        doc.addPage();
+                        y = NathIA_App.config.pdfMargins.top;
+                        pageNumber++;
+                        addHeader(doc);
+                        y += 40;
+                        
+                        doc.setFontSize(24);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('Servicios de Desarrollo de Activos Digitales', 40, y);
+                        y += 40;
+                        
+                        allServicesData.forEach(service => {
+                            const descLines = doc.splitTextToSize(service.description, 500);
+                            const detailLines = service.details.map(d => doc.splitTextToSize(d.text, 450)).flat();
+                            const neededHeight = 30 + doc.getTextDimensions(descLines).h + detailLines.length * 20 + 40;
+                            y = checkPageBreak(neededHeight);
+
+                            doc.setFontSize(18);
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(...NathIA_App.config.pdfAccentColor);
+                            doc.text(service.title, 40, y);
+                            y += 25;
+                            
+                            doc.setFontSize(12);
+                            doc.setFont('helvetica', 'normal');
+                            doc.setTextColor(...NathIA_App.config.pdfTextColor);
+                            doc.setLineHeightFactor(NathIA_App.config.pdfLineSpacing);
+                            doc.text(descLines, 40, y);
+                            y += doc.getTextDimensions(descLines).h + 15;
+
+                            service.details.forEach(detail => {
+                                doc.setFontSize(11);
+                                doc.setFont('helvetica', 'bold');
+                                doc.text(`• ${detail.title}`, 50, y);
+                                doc.setFont('helvetica', 'normal');
+                                doc.setTextColor(75, 85, 99);
+                                const lines = doc.splitTextToSize(detail.text, 450);
+                                doc.text(lines, 60, y + 12);
+                                y += doc.getTextDimensions(lines).h + 10;
+                            });
+                            y += 30;
+                        });
+                        
+                        y = checkPageBreak(250);
+                        doc.setDrawColor(200, 200, 200);
+                        doc.line(40, y, doc.internal.pageSize.getWidth() - 40, y);
+                        y += 30;
+                        
+                        doc.setFontSize(16);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(...NathIA_App.config.pdfTextColor);
+                        doc.text('Información de Contacto', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+                        y += 25;
+                        
+                        doc.setFontSize(12);
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(`WhatsApp: ${NathIA_App.config.whatsAppPhone}`, doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+                        y += 20;
+                        doc.text('Email: info@nathia.com', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+                        y += 40;
+                        
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('A su disposición,', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+                        y += 40;
+                        
+                        doc.setFont('helvetica', 'italic');
+                        doc.setFontSize(18);
+                        doc.setTextColor(...NathIA_App.config.pdfAccentColor);
+                        doc.text('Nathalia Pertuz Pava', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+                        y += 20;
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(12);
+                        doc.setTextColor(...NathIA_App.config.pdfTextColor);
+                        doc.text('Gerente General y Desarrollo de Proyectos', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+                        
+                        addFooter(doc, pageNumber);
+                        
+                        doc.save('NathIA_Portafolio_Profesional.pdf');
+
+                    } catch (error) {
+                        console.error("Error generating PDF:", error);
+                        NathIA_App.showNotification('Error al generar el PDF. Inténtalo de nuevo.', 'error');
+                    } finally {
+                        NathIA_App.hideLoading();
+                    }
+                }
+            }
+        };
+
+        // --- Initialize the App ---
+        document.addEventListener('DOMContentLoaded', () => {
+            NathIA_App.init();
+        });
+
+    </script>
+</body>
+</html>
